@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Form</title>
+</head>
+<body>
+    <h1>Registration Form</h1>
+    
+    <!-- register.html -->
+    <form method="post" action="/register/">  
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register</button>
+    </form>
+
+    <br>
+    <button onclick="window.location.href='/login'">Go to Login</button>
+</body>
+</html>

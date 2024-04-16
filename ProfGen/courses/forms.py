@@ -1,6 +1,8 @@
 from django import forms
 
-from .models import Course, UploadedMaterial
+from .models import Course, UploadedMaterial, Professor
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 class CourseForm(forms.ModelForm):
     class Meta:
@@ -12,6 +14,17 @@ class CourseForm(forms.ModelForm):
             'semester': forms.TextInput(attrs={'class': 'form-control'}),
             'year': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+
+class UploadedMaterialForm(forms.ModelForm):
+    class Meta:
+        model = UploadedMaterial
+        fields = ['title', 'file']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
 
 class AssignmentForm(forms.ModelForm):
     LANGUAGE_CHOICES = (("python", "Python"), ("java", "Java"), ("c", "C"), ("c++", "C++"), ("other", "Other"))

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course List</title>
+</head>
+
+
+
+<body>
+    <h1>Course List</h1>
+    <button onclick="window.location.href='/course/new/'">Create New Course</button>
+    <ul>
+        {% for course in courses %}
+        <li><a href="/course/{{ course.id }}/">{{ course }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

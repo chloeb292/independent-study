@@ -1,0 +1,38 @@
+
+{% block content %}
+    <h1>Course Details</h1>
+    <h2>{{ course.title }}</h2>
+    <p>{{ course.description }}</p>
+
+    <a href="{% url 'upload_material' course_id=course.id %}">Upload New Material</a>
+
+    
+    <h3>Uploaded Materials</h3>
+    <ul>
+        {% for material in course.material_set.all %}
+        <li><a href="{{ material.file.url }}">{{ material.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <h3>Assignments</h3>
+    <ul>
+        {% for assignment in course.assignment_set.all %}
+        <li><a href="/assignment/{{ assignment.id }}/">{{ assignment.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <h3>Quizzes</h3>
+    <ul>
+        {% for quiz in course.quiz_set.all %}
+        <li><a href="/quiz/{{ quiz.id }}/">{{ quiz.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <h3>Exams</h3>
+    <ul>
+        {% for exam in course.exam_set.all %}
+        <li><a href="/exam/{{ exam.id }}/">{{ exam.title }}</a></li>
+        {% endfor %}
+
+    
+{% endblock %}
