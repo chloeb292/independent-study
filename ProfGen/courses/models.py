@@ -14,6 +14,7 @@ class Professor(models.Model):
 class Course(models.Model):
     professor = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
+    course_OASIS_id = models.CharField(max_length=200, default="AAA111")
     description = models.TextField()
     semester = models.CharField(max_length=200)
     year = models.IntegerField()
@@ -24,7 +25,7 @@ class Course(models.Model):
 class UploadedMaterial(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    file = models.FileField(upload_to='materials/')
+    file = models.FileField(upload_to='templates/courses/materials/')
 
     def __str__(self):
         return str(self.title)
@@ -33,7 +34,7 @@ class Assignment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    rubric = models.TextField()
+    content = models.TextField(default="Assignment content will be generated here")
 
     def __str__(self):
         return str(self.title)

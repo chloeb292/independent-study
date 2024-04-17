@@ -4,12 +4,14 @@ from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
 from ..models import Course, UploadedMaterial
 from ..forms import CourseForm, UploadedMaterialForm
+from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
 
 @login_required
 def course_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    courses = Course.objects.all()
+    courses = Course.objects.filter(professor=request.user).all()
     return render(request, 'courses/course_list.html', {'courses': courses})
 
 @login_required
@@ -17,7 +19,8 @@ def course_detail(request, course_id):
     if not request.user.is_authenticated:
         return redirect('login')
     course = get_object_or_404(Course, id=course_id)
-    return render(request, 'courses/course_detail.html', {'course': course})
+    course_materials = UploadedMaterial.objects.filter(course=course)
+    return render(request, 'courses/course_detail.html', {'course': course, 'course_materials': course_materials})
 
 @login_required
 def create_course(request):
@@ -63,3 +66,21 @@ def upload_material(request, course_id):
 def material_detail(request, course_id, material_id):
     material = get_object_or_404(UploadedMaterial, id=material_id, course_id=course_id)
     return render(request, 'courses/material_detail.html', {'material': material})
+
+
+@login_required
+def delete_material(request, course_id, material_id):
+    material = get_object_or_404(UploadedMaterial, id=material_id, course_id=course_id)
+
+    # Check if the user is the professor of the course
+    if material.course.professor != request.user:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        # Delete the file associated with the material
+        material.file.delete(save=False)  # save=False prevents the model from being saved after file deletion
+        # Delete the material record
+        material.delete()
+        return redirect('course_detail', course_id=course_id)
+    else:
+        return HttpResponseForbidden('Only POST method is accepted')
