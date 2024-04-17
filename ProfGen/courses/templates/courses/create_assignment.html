@@ -1,0 +1,9 @@
+<button onclick="window.location.href='/course/{{ course.id }}/';">Cancel</button>
+{% block content %}
+    <h1>Generate Assignment</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create</button>
+    </form>
+{% endblock %}
