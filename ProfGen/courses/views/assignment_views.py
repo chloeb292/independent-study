@@ -32,21 +32,6 @@ def create_assignment(request, course_id):
         form = AssignmentForm(course=course)
     return render(request, 'courses/create_assignment.html', {'form': form, 'course': course})
 
-
-# topics_and_concepts = forms.CharField(max_length=200, required=False)
-# goal_of_assignment = forms.CharField(widget=forms.Textarea, required=False)
-
-# programming_language = forms.ChoiceField(choices=LANGUAGE_CHOICES, widget=forms.Select, required=False)
-# if programming_language == 'other':
-#     programming_language = forms.CharField(max_length=100, required=False)
-
-# difficulty_level = forms.ChoiceField(choices=DIFFICULTY_CHOICES, widget=forms.Select, required=False)
-# total_points = forms.IntegerField(min_value=1, max_value=100, required=False)
-# specific_requirements_and_instructions = forms.CharField(widget=forms.Textarea, required=False)
-
-# limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
-# selected_materials = forms.ModelMultipleChoiceField(queryset=UploadedMaterial.objects.none(), required=False)
-
 def generate_assignment_content(data):
     model = genai.GenerativeModel('gemini-pro')
     chat = model.start_chat(history=[])
