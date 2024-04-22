@@ -24,24 +24,26 @@
     <h3>Assignments</h3>
     <ul>
         {% for assignment in course.assignment_set.all %}
-        <li><a href="/assignment/{{ assignment.id }}/">{{ assignment.title }}</a></li>
+        <li><a href="{% url 'assignment_detail' course.id assignment.id %}">{{ assignment.title }}</a>
+        <!-- Delete -->
+
+        </li>
         {% endfor %}
     </ul>
     <button onclick="window.location.href='/course/{{ course.id }}/assignment/new';">Generate New Assignment</button>
 
-    <h3>Quizzes</h3>
+    <h3>Quizzes / Exams</h3>
     <ul>
         {% for quiz in course.quiz_set.all %}
-        <li><a href="/quiz/{{ quiz.id }}/">{{ quiz.title }}</a></li>
+        <li><a href="{% url 'quiz_detail' course.id quiz.id %}">{{ quiz.title }}</a>
+        <!-- Delete -->
+        
+        </li>
         {% endfor %}
     </ul>
+    <button onclick="window.location.href='/course/{{ course.id }}/quiz/new';">Generate New Quiz/Exam</button>
 
-    <h3>Exams</h3>
-    <ul>
-        {% for exam in course.exam_set.all %}
-        <li><a href="/exam/{{ exam.id }}/">{{ exam.title }}</a></li>
-        {% endfor %}
+    <h3></h3>
 
-    </ul>
     <button onclick="window.location.href='/logout/'">Logout</button>
 {% endblock %}

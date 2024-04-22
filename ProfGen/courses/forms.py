@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Course, UploadedMaterial, Professor, Assignment, Quiz, Exam
+from .models import Course, UploadedMaterial, Professor, Assignment, Quiz
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
@@ -26,22 +26,6 @@ class UploadedMaterialForm(forms.ModelForm):
             'file': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-# class Assignment(models.Model):
-#     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-#     title = models.CharField(max_length=200)
-#     description = models.TextField()
-#     rubric = models.TextField()
-
-#     def __str__(self):
-#         return str(self.title)
-
-# class UploadedMaterial(models.Model):
-#     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-#     title = models.CharField(max_length=200)
-#     file = models.FileField(upload_to='templates/courses/materials/')
-
-#     def __str__(self):
-#         return str(self.title)
 
 class AssignmentForm(forms.ModelForm):
     class Meta:
@@ -59,9 +43,8 @@ class AssignmentForm(forms.ModelForm):
         ("advanced", "Advanced"),
     )
 
-    topics_and_concepts = forms.CharField(max_length=200, required=False)
     goal_of_assignment = forms.CharField(widget=forms.Textarea, required=False)
-    
+
     programming_language = forms.ChoiceField(choices=LANGUAGE_CHOICES, widget=forms.Select, required=False)
     if programming_language == 'other':
         programming_language = forms.CharField(max_length=100, required=False)
@@ -82,7 +65,16 @@ class AssignmentForm(forms.ModelForm):
 
 
 
-class QuizForm(forms.Form):
+class QuizForm(forms.ModelForm):
+    class Meta:
+        model = Quiz
+        fields = ['title', 'description']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+
     LANGUAGE_CHOICES = (("python", "Python"), ("java", "Java"), ("c", "C"), ("c++", "C++"), ("other", "Other"))
 
     DIFFICULTY_CHOICES =(
@@ -123,4 +115,10 @@ class QuizForm(forms.Form):
     # MATERIAL SELECTION
     limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
     selected_materials = forms.ModelMultipleChoiceField(queryset=UploadedMaterial.objects.all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        course = kwargs.pop('course', None)
+        super(QuizForm, self).__init__(*args, **kwargs)
+        if course:
+            self.fields['selected_materials'].queryset = UploadedMaterial.objects.filter(course=course)
     

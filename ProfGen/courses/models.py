@@ -35,6 +35,7 @@ class Assignment(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     content = models.TextField(default="Assignment content will be generated here")
+    answerkey = models.TextField(default="Answer key will be generated here")
 
     def __str__(self):
         return str(self.title)
@@ -49,13 +50,3 @@ class Quiz(models.Model):
     def __str__(self):
         return str(self.title)
     
-class Exam(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    questions = models.TextField()
-    answerkey = models.TextField()
-
-
-    def __str__(self):
-        return str(self.title)
