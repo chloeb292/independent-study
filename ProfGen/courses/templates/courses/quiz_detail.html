@@ -1,0 +1,20 @@
+{% load markdown_deux_tags %}
+
+<button onclick="window.location.href='/course/{{ quiz.course.id }}/';">Back to Course</button>
+
+{% block content %}
+    <h1>Quiz Details</h1>
+    <h2>{{ quiz.title }}</h2>
+    <p>{{ quiz.description }}</p>
+
+    {{ quiz.questions|safe }}
+    
+    <h1>Answer Key</h1>
+    {{ answerkey|markdown|safe }}
+  
+    <button onclick="window.location.href='/course/{{ course.id }}/quiz/{{ quiz.id }}/generate_quiz_answer_key/';">
+        Generate/Regenerate Answer Key
+    </button>
+    
+{% endblock %}
+

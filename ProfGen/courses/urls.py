@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf import settings
-from .views import assignment_views, course_views, exam_views, quiz_views, user_views
+from .views import assignment_views, course_views, quiz_views, user_views
 from django.conf.urls.static import static
 
 urlpatterns = [
@@ -18,16 +18,15 @@ urlpatterns = [
     path('course/<int:course_id>/material/<int:material_id>/delete/', course_views.delete_material, name='delete_material'),
 
     path('course/<int:course_id>/assignment/new/', assignment_views.create_assignment, name='create_assignment'),
-    # path('course/<int:course_id>/assignment/<int:assignment_id>/', assignment_views.assignment_detail, name='assignment_detail'),
+    path('course/<int:course_id>/assignment/<int:assignment_id>/', assignment_views.assignment_detail, name='assignment_detail'),
+    path('course/<int:course_id>/assignment/<int:assignment_id>/delete/', assignment_views.delete_assignment, name='delete_assignment'),
+    path('course/<int:course_id>/assignment/<int:assignment_id>/generate_answer_key/', assignment_views.generate_answer_key, name='generate_answer_key'),
 
-    # path('course/<int:course_id>/quiz/new/', quiz_views.create_quiz, name='create_quiz'),
-    # path('course/<int:course_id>/quiz/<int:quiz_id>/', quiz_views.quiz_detail, name='quiz_detail'),
-
-    # path('course/<int:course_id>/exam/new/', exam_views.create_exam, name='create_exam'),
-    # path('course/<int:course_id>/exam/<int:exam_id>/', exam_views.exam_detail, name='exam_detail'),
-
+    path('course/<int:course_id>/quiz/new/', quiz_views.create_quiz, name='create_quiz'),
+    path('course/<int:course_id>/quiz/<int:quiz_id>/', quiz_views.quiz_detail, name='quiz_detail'),
+    # path('course/<int:course_id>/quiz/<int:quiz_id>/delete_quiz/', quiz_views.delete_quiz, name='delete_quiz'),
+    path('course/<int:course_id>/quiz/<int:quiz_id>/generate_quiz_answer_key/', quiz_views.generate_quiz_answer_key, name='generate_quiz_answer_key'),
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
