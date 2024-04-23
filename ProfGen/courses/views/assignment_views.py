@@ -1,8 +1,9 @@
 from django.shortcuts import render
+import pdfplumber
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from courses.models import Course, Assignment
-from courses.forms import AssignmentForm
+from courses.models import Course, Assignment, Student_Assignment
+from courses.forms import AssignmentForm, StudentAssignmentAnswerForm
 import google.generativeai as genai
 import os, pathlib, textwrap
 import markdown
@@ -37,8 +38,9 @@ def create_assignment(request, course_id):
 def assignment_detail(request, course_id, assignment_id):
     course = get_object_or_404(Course, pk=course_id)
     assignment = get_object_or_404(Assignment, pk=assignment_id)
+    graded_assignments = Student_Assignment.objects.filter(assignment=assignment)
     # print("ANSWER KEY", assignment.answerkey)
-    return render(request, 'courses/assignment_detail.html', {'course': course, 'assignment': assignment, 'answerkey': assignment.answerkey})
+    return render(request, 'courses/assignment_detail.html', {'course': course, 'assignment': assignment, 'answerkey': assignment.answerkey, 'graded_assignments': graded_assignments})
 
 def delete_assignment(course_id, assignment_id):
     assignment = get_object_or_404(Assignment, pk=assignment_id)
@@ -61,47 +63,7 @@ def generate_assignment_content(data):
     
     user_input+="""
 
-    Format and Elements for Assignments
-    
-    Title and Description:
-    Begin with a clear title and a brief description of the assignments main objective or theme.
-    
-    Naming Rule:
-    Each assignment includes a specific naming rule for the file(s) to be created.
-    
-    Programming Task Details:
-    Detailed instructions are provided on what needs to be programmed. This includes:
-    Specific functions to be implemented.
-    Desired behavior and functionality of the program.
-    Any specific methods, formulas, or approaches that should be used.
-    Specific data structures or types that should be employed.
-    
-    Input/Output Requirements:
-    Explicit instructions on how the program should handle input and output. This might involve:
-    Reading from or writing to files.
-    Handling user input via the command line.
-    Formatting the output or results.
-    
-    Validation and Error Handling:
-    Instructions on how to handle incorrect or unexpected inputs.
-    Requirements for validating user inputs or data read from files.
-    
-    External Libraries or Modules:
-    If applicable, instructions to use certain Python modules or external libraries, including how and where to use them in the program.
-    
-    Sample Output or Interaction:
-    Providing examples of what the output should look like or how the user should interact with the program.
-    For assignments involving user interaction, a walkthrough of a sample session may be provided.
-    
-    Points Allocation:
-    Each assignment specifies how many points it is worth, often indicating a focus on assessment transparency.
-    Patterns in Assignment Design
-    Practical Application: Each assignment encourages applying theoretical knowledge to practical programming tasks, enhancing learning through doing.
-    Incremental Complexity: Tasks typically build on basic concepts, gradually introducing complexity (e.g., starting with class creation, moving to file operations, then data visualization).
-    Feedback Mechanisms: Sample outputs and interaction transcripts help students understand the expected program behavior and structure their code accordingly.
-    Skill Reinforcement: Assignments often reinforce fundamental programming skills like class design, file I/O, data manipulation, and using libraries.
-    
-    Example Assignment Template:
+    Assignment Template:
     ### Assignment Title: [Title Here]
 
     **Points: [XX pts]**
@@ -129,14 +91,14 @@ def generate_assignment_content(data):
 
     ---
 
-    IMPORTANT: ASSIGNMENT MUST INCLUDE EACH OF THE ABOVE ELEMENTS TO ENSURE COMPLETENESS AND CLARITY. DO NOT DEVIATE FROM THE SPECIFIED FORMAT.
+    IMPORTANT: ASSIGNMENT MUST INCLUDE EACH OF THE ABOVE ELEMENTS TO ENSURE COMPLETENESS AND CLARITY. DO NOT DEVIATE FROM THE SPECIFIED FORMAT. DO NOT CREATE AN ANSWER KEY FOR THIS ASSIGNMENT. When writing comments in the code, do not use '#', simply write the comment or explanation.
 
     """
 
     response = model.generate_content(user_input)
 
     response = response.text.strip()
-    response = markdown.markdown(response)
+    # response = markdown.markdown(response)
 
     return response
 
@@ -156,6 +118,8 @@ def generate_answer_key(request, course_id, assignment_id):
     Put comments where necessary to explain the code and how it meets the requirements of the rubric.
     </code>
 
+    IMPORTANT: When writing comments in the code, do not use '#', simply write the comment or explanation.
+
     At the end of each question, you should have a comment that explains the code and how it meets the requirements of the rubric. This will help the student understand how the code solves the problem and why it is correct.
     
     """)
@@ -170,3 +134,68 @@ def generate_answer_key(request, course_id, assignment_id):
     # print("ANSWER KEY", assignment.answerkey)
     return redirect('assignment_detail', course_id=course_id, assignment_id=assignment_id)
     
+
+def extract_text_from_pdf(file):
+    # extract text from a PDF file using pdfplumber and an in-memory file
+    with pdfplumber.open(file) as pdf:
+        text = " ".join(page.extract_text() for page in pdf.pages)
+    return text
+
+def grade_student_assignment(request, course_id, assignment_id):
+    assignment = get_object_or_404(Assignment, pk=assignment_id)
+    if request.method == 'POST':
+        form = StudentAssignmentAnswerForm(request.POST, request.FILES)
+    else:
+        form = StudentAssignmentAnswerForm()
+
+    if request.method == 'POST' and form.is_valid():
+        data = form.cleaned_data
+        student_f_name = data['student_f_name']
+        student_l_name = data['student_l_name']
+        uploaded_files = request.FILES.getlist("submission")
+        submission_text = ""
+
+        # check if the uploaded file is a PDF
+        if not all(file.name.endswith('.pdf') for file in uploaded_files):
+            form.add_error(None, "Please upload only PDF files.")
+            return render(request, 'courses/grade_student_assignment.html', {'assignment': assignment, 'form': form})
+
+        for file in uploaded_files:
+            submission_text += extract_text_from_pdf(file)
+
+        print("SUBMISSION TEXT", submission_text)   
+
+        # Grade the assignment, compare submission to assignment.content and assignment.answerkey (if assigbment.answerkey exists, if not, generate one)
+        if not assignment.answerkey:
+            generate_answer_key(request, course_id, assignment_id)
+
+        user_prompt = textwrap.dedent(f""" You are a professor grading a student's assignment. Please grade the following assignment according to the context of the assignment and the answer key provided.
+        The student's submission is as follows:
+            {submission_text}
+
+        The assignment content is as follows:
+            {assignment.content}
+
+        The answer key is as follows:
+            {assignment.answerkey}
+        
+        Please provide a grade for each question in the assignment. Explain why the student received the grade they did. If the student's answer is incorrect, provide feedback on how they can improve.
+        """)
+
+        response = model.generate_content(user_prompt)
+        response = response.text.strip()
+        print("RESPONSE", response)
+
+        # Save the student's assignment and grade
+        student_assignment = Student_Assignment(student_f_name=student_f_name, student_l_name=student_l_name, assignment=assignment, submission=submission_text, grade=response)
+        student_assignment.save()
+
+        return redirect('student_assignment_detail', course_id=course_id, assignment_id=assignment_id, student_assignment_id=student_assignment.id)
+    return render(request, 'courses/grade_student_assignment.html', {'assignment': assignment, 'form': form})
+
+def student_assignment_detail(request, course_id, assignment_id, student_assignment_id):
+    course = get_object_or_404(Course, pk=course_id)
+    assignment = get_object_or_404(Assignment, pk=assignment_id)
+    student_assignment = get_object_or_404(Student_Assignment, pk=student_assignment_id)
+    print("SUBMISSION",student_assignment.submission)
+    return render(request, 'courses/student_assignment_detail.html', {'course': course, 'assignment': assignment, 'student_assignment': student_assignment})

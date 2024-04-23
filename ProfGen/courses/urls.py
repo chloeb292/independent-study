@@ -19,13 +19,17 @@ urlpatterns = [
 
     path('course/<int:course_id>/assignment/new/', assignment_views.create_assignment, name='create_assignment'),
     path('course/<int:course_id>/assignment/<int:assignment_id>/', assignment_views.assignment_detail, name='assignment_detail'),
-    path('course/<int:course_id>/assignment/<int:assignment_id>/delete/', assignment_views.delete_assignment, name='delete_assignment'),
+    # path('course/<int:course_id>/assignment/<int:assignment_id>/delete/', assignment_views.delete_assignment, name='delete_assignment'),
     path('course/<int:course_id>/assignment/<int:assignment_id>/generate_answer_key/', assignment_views.generate_answer_key, name='generate_answer_key'),
 
     path('course/<int:course_id>/quiz/new/', quiz_views.create_quiz, name='create_quiz'),
     path('course/<int:course_id>/quiz/<int:quiz_id>/', quiz_views.quiz_detail, name='quiz_detail'),
     # path('course/<int:course_id>/quiz/<int:quiz_id>/delete_quiz/', quiz_views.delete_quiz, name='delete_quiz'),
     path('course/<int:course_id>/quiz/<int:quiz_id>/generate_quiz_answer_key/', quiz_views.generate_quiz_answer_key, name='generate_quiz_answer_key'),
+
+    path('course/<int:course_id>/assignment/<int:assignment_id>/grade_student_assignment/', assignment_views.grade_student_assignment, name='grade_student_assignment'),
+    path('course/<int:course_id>/assignment/<int:assignment_id>/student_assignment_detail/<int:student_assignment_id>', assignment_views.student_assignment_detail, name='student_assignment_detail'),
+    # path('course/<int:course_id>/quiz/<int:quiz_id>/grade_student_quiz/', quiz_views.grade_student_quiz, name='grade_student_quiz'),
 ]
 
 if settings.DEBUG:
