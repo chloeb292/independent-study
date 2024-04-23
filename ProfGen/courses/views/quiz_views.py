@@ -62,12 +62,14 @@ def generate_quiz_questions(data):
     if data['limit_to_selected'] and data['selected_materials']:
         user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
     
-    user_input+= textwrap.dedent(f"""This quiz must be exclusively about the following topics: {data['topics_and_concepts']}""")
+    user_input+= textwrap.dedent(f"""This quiz must be exclusively about the following topics: {data['topics_and_concepts']}
+
+    IMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. """)
 
     response = model.generate_content(user_input)
 
     response = response.text.strip()
-    response = markdown.markdown(response)
+    # response = markdown.markdown(response)
 
     return response
 
@@ -85,6 +87,8 @@ def generate_quiz_answer_key(request, course_id, quiz_id):  # Corrected view sig
     Question 2: Answer
     Question 3: Answer
     etc.
+                                 
+    IMPORTANT: When writing comments in the code, do not use '#', simply write the comment or explanation.
     
     The quiz questions as follows:
     {quiz.questions}.
@@ -95,3 +99,17 @@ def generate_quiz_answer_key(request, course_id, quiz_id):  # Corrected view sig
     quiz.save()  # Save updated quiz object
 
     return redirect('quiz_detail', course_id=course_id, quiz_id=quiz_id)
+
+
+def upload_student_submission(request, course_id):
+    course = get_object_or_404(Course, id=course_id, professor=request.user)
+    if request.method == 'POST':
+        form = StudentAssignmentAnswerForm(request.POST, request.FILES)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.course = course
+            material.save()
+            return redirect('quiz_detail', course_id=course.id, quiz_id=quiz_id)
+    else:
+        form = StudentAssignmentAnswerForm()
+    return render(request, 'courses/upload_material.html', {'form': form, 'course': course})

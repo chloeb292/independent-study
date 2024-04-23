@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Course, UploadedMaterial, Professor, Assignment, Quiz
+from .models import Course, UploadedMaterial, Professor, Assignment, Quiz, Student_Assignment, Student_Quiz
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
@@ -122,3 +122,14 @@ class QuizForm(forms.ModelForm):
         if course:
             self.fields['selected_materials'].queryset = UploadedMaterial.objects.filter(course=course)
     
+
+class StudentAssignmentAnswerForm(forms.ModelForm):
+    class Meta:
+        model = Student_Assignment
+        fields = ['student_f_name', 'student_l_name', 'submission']
+        widgets = {
+            'student_f_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'student_l_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'submission': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+

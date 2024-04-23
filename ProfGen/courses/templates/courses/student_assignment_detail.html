@@ -1,0 +1,17 @@
+{% load markdown_deux_tags %}
+
+<button onclick="window.location.href='/course/{{ course.id }}/assignment/{{ assignment.id }}/';">
+    Back
+</button>
+
+<h1>{{student_assignment.student_f_name}} {{student_assignment.student_l_name}} -- {{assignment.title}}</h1>
+<h2>Student Submission</h2>
+
+<pre>
+    {{student_assignment.submission|safe}}
+</pre>
+    
+
+
+<h2>Grade</h2>
+{{student_assignment.grade|markdown|safe}}

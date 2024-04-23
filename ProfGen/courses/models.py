@@ -50,3 +50,22 @@ class Quiz(models.Model):
     def __str__(self):
         return str(self.title)
     
+class Student_Assignment(models.Model):
+    student_f_name = models.CharField(max_length=200)
+    student_l_name = models.CharField(max_length=200)
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    submission = models.TextField()
+    grade = models.TextField()
+
+    def __str__(self):
+        return str(self.student_f_name) + " " + str(self.assignment)
+    
+class Student_Quiz(models.Model):
+    student_f_name = models.CharField(max_length=200)
+    student_l_name = models.CharField(max_length=200)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    submission = models.TextField()
+    grade = models.TextField()
+
+    def __str__(self):
+        return str(self.student_f_name) + " " + str(self.quiz)

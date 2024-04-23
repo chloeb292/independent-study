@@ -2,18 +2,25 @@
 
 <button onclick="window.location.href='/course/{{ assignment.course.id }}/';">Back to Course</button>
 
-{% block content %}
-    <h1>Assignment Details</h1>
-    <h2>{{ assignment.title }}</h2>
-    <p>{{ assignment.description }}</p>
+<h1>Assignment Details</h1>
+<h2>{{ assignment.title }}</h2>
+<p>{{ assignment.description }}</p>
 
-    {{ assignment.content|safe }}
-    
-    <h1>Answer Key</h1>
-    {{ answerkey|markdown|safe }}
-    
+{{ assignment.content|safe }}
 
-    <button onclick="window.location.href='/course/{{ assignment.course.id }}/assignment/{{assignment.id}}/generate_answer_key/';">Generate/Regenerate Answer Key</button>
+<h1>Answer Key</h1>
+{{ answerkey|markdown|safe }}
 
-{% endblock %}
+
+<button onclick="window.location.href='/course/{{ assignment.course.id }}/assignment/{{assignment.id}}/generate_answer_key/';">Generate/Regenerate Answer Key</button>
+
+<h1>Grade Assignments</h1>
+
+<button onclick="window.location.href='/course/{{ course.id }}/assignment/{{ assignment.id }}/grade_student_assignment/';">
+    Upload new student answers to grade
+</button>
+
+{% for graded_assignment in graded_assignments %}
+    <li><a href="{% url 'student_assignment_detail' course.id assignment.id graded_assignment.id %}">{{ graded_assignment.student_f_name }} {{ graded_assignment.student_l_name }}</a></li>
+{% endfor %}
 
