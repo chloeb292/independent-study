@@ -29,7 +29,9 @@ urlpatterns = [
 
     path('course/<int:course_id>/assignment/<int:assignment_id>/grade_student_assignment/', assignment_views.grade_student_assignment, name='grade_student_assignment'),
     path('course/<int:course_id>/assignment/<int:assignment_id>/student_assignment_detail/<int:student_assignment_id>', assignment_views.student_assignment_detail, name='student_assignment_detail'),
-    # path('course/<int:course_id>/quiz/<int:quiz_id>/grade_student_quiz/', quiz_views.grade_student_quiz, name='grade_student_quiz'),
+    
+    path('course/<int:course_id>/quiz/<int:quiz_id>/grade_student_quiz/', quiz_views.grade_student_quiz, name='grade_student_quiz'),
+    path('course/<int:course_id>/quiz/<int:quiz_id>/student_quiz_detail/<int:student_quiz_id>', quiz_views.student_quiz_detail, name='student_quiz_detail'),
 ]
 
 if settings.DEBUG:

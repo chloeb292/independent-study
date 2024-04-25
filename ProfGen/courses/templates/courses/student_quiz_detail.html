@@ -1,0 +1,17 @@
+{% load markdown_deux_tags %}
+
+<button onclick="window.location.href='/course/{{ course.id }}/quiz/{{ quiz.id }}/';">
+    Back
+</button>
+
+<h1>{{student_quiz.student_f_name}} {{student_quiz.student_l_name}} -- {{student_quiz.title}}</h1>
+<h2>Student Submission</h2>
+
+<pre>
+    {{student_quiz.submission|safe}}
+</pre>
+    
+
+
+<h2>Grade</h2>
+{{student_quiz.grade|markdown|safe}}

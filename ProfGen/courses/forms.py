@@ -133,3 +133,13 @@ class StudentAssignmentAnswerForm(forms.ModelForm):
             'submission': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
+
+class StudentQuizAnswerForm(forms.ModelForm):
+    class Meta:
+        model = Student_Quiz
+        fields = ['student_f_name', 'student_l_name', 'submission']
+        widgets = {
+            'student_f_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'student_l_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'submission': forms.FileInput(attrs={'class': 'form-control'}),
+        }

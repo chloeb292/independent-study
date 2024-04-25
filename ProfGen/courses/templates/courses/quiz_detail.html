@@ -16,3 +16,12 @@
 </button>
 
 <h1>Grade Quizzs / Exams</h1>
+
+<button onclick="window.location.href='/course/{{ course.id }}/quiz/{{ quiz.id }}/grade_student_quiz/';">
+    Upload new student answers to grade
+</button>
+
+{% for graded_quiz in graded_quizes %}
+    <li><a href="{% url 'student_quiz_detail' course.id quiz.id graded_quiz.id %}">{{ graded_quiz.student_f_name }} {{ graded_quiz.student_l_name }}</a></li>
+{% endfor %}
+
