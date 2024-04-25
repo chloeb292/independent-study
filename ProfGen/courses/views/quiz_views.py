@@ -1,12 +1,16 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from courses.models import Course, Quiz
-from courses.forms import QuizForm
+from courses.models import Course, Quiz, Student_Quiz
+from courses.forms import QuizForm, StudentQuizAnswerForm
 import google.generativeai as genai
 import os, pathlib, textwrap
 from dotenv import load_dotenv
 import markdown
+import pdfplumber
+import pytesseract
+from PIL import Image
+from io import BytesIO
 
 
 load_dotenv()
@@ -38,7 +42,8 @@ def create_quiz(request, course_id):
 def quiz_detail(request, course_id, quiz_id):
     course = get_object_or_404(Course, pk=course_id)
     quiz = get_object_or_404(Quiz, pk=quiz_id)
-    return render(request, 'courses/quiz_detail.html', {'course': course, 'quiz': quiz, 'answerkey': quiz.answerkey})
+    graded_quizes = Student_Quiz.objects.filter(quiz=quiz)
+    return render(request, 'courses/quiz_detail.html', {'course': course, 'quiz': quiz, 'answerkey': quiz.answerkey, 'graded_quizes': graded_quizes})
 
 def delete_quiz(course_id, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
@@ -100,16 +105,74 @@ def generate_quiz_answer_key(request, course_id, quiz_id):  # Corrected view sig
 
     return redirect('quiz_detail', course_id=course_id, quiz_id=quiz_id)
 
+def extract_text_from_image(file):
+    # Convert the file to an image object
+    image = Image.open(file)
+    text = pytesseract.image_to_string(image)
+    
+    return text
 
-def upload_student_submission(request, course_id):
-    course = get_object_or_404(Course, id=course_id, professor=request.user)
+def extract_text_from_pdf(file):
+    # extract text from a PDF file using pdfplumber and an in-memory file
+    with pdfplumber.open(file) as pdf:
+        text = " ".join(page.extract_text() for page in pdf.pages)
+    return text
+
+
+def grade_student_quiz(request, course_id, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
     if request.method == 'POST':
-        form = StudentAssignmentAnswerForm(request.POST, request.FILES)
-        if form.is_valid():
-            material = form.save(commit=False)
-            material.course = course
-            material.save()
-            return redirect('quiz_detail', course_id=course.id, quiz_id=quiz_id)
+        form = StudentQuizAnswerForm(request.POST, request.FILES)
     else:
-        form = StudentAssignmentAnswerForm()
-    return render(request, 'courses/upload_material.html', {'form': form, 'course': course})
+        form = StudentQuizAnswerForm()
+
+    if request.method == 'POST' and form.is_valid():
+        data = form.cleaned_data
+        student_f_name = data['student_f_name']
+        student_l_name = data['student_l_name']
+        uploaded_files = request.FILES.getlist("submission")
+        submission_text = ""
+
+        # check if the uploaded file is a PDF
+        if not all(file.name.endswith('.pdf') for file in uploaded_files):
+            form.add_error(None, "Please upload only PDF files.")
+            return render(request, 'courses/grade_student_quiz.html', {'quiz': quiz, 'form': form})
+
+        for file in uploaded_files:
+            submission_text += extract_text_from_pdf(file)
+
+        print("SUBMISSION TEXT", submission_text)   
+
+        # Grade the quiz, compare submission to quiz.questions and quiz.answerkey (if quiz.answerkey exists, if not, generate one)
+        if not quiz.answerkey:
+            generate_quiz_answer_key(request, course_id, quiz_id)
+
+        user_prompt = textwrap.dedent(f""" You are a professor grading a student's quiz. Please grade the following quiz according to the context of the quiz and the answer key provided.
+        The student's submission is as follows:
+            {submission_text}
+
+        The quiz questions are as follows:
+            {quiz.questions}
+
+        The answer key is as follows:
+            {quiz.answerkey}
+        
+        Please provide a grade for each question in the quiz. Explain why the student received the grade they did. If the student's answer is incorrect, provide feedback on how they can improve.
+        """)
+
+        response = model.generate_content(user_prompt)
+        response = response.text.strip()
+        print("RESPONSE", response)
+
+        # Save the student's quiz and grade
+        student_quiz = Student_Quiz(student_f_name=student_f_name, student_l_name=student_l_name, quiz=quiz, submission=submission_text, grade=response)
+        student_quiz.save()
+
+        return redirect('student_quiz_detail', course_id=course_id, quiz_id=quiz_id, student_quiz_id=student_quiz.id)
+    return render(request, 'courses/grade_student_quiz.html', {'quiz': quiz, 'form': form})
+
+def student_quiz_detail(request, course_id, quiz_id, student_quiz_id):
+    course = get_object_or_404(Course, pk=course_id)
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    student_quiz = get_object_or_404(Student_Quiz, pk=student_quiz_id)
+    return render(request, 'courses/student_quiz_detail.html', {'course': course, 'quiz': quiz, 'student_quiz': student_quiz})
