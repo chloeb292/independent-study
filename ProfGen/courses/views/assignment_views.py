@@ -60,9 +60,13 @@ def generate_assignment_content(data):
     The total points for this assignment is: {data['total_points']}. Please distribute the points according to the difficulty of the questions.
     The specific requirements and instructions for this assignment are: {data['specific_requirements_and_instructions']}.                     
     """)
-    if data['limit_to_selected'] and data['selected_materials']:
-        user_input += "The assignment should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
-    
+    if data['selected_materials']:
+
+        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
+        for material in data['selected_materials']:
+            user_input += f"Material: {material.title}\n{material.text}\n"
+
+
     user_input+="""
 
     Assignment Template:

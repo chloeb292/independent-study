@@ -68,8 +68,15 @@ def generate_quiz_questions(data):
         user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
     
     user_input+= textwrap.dedent(f"""This quiz must be exclusively about the following topics: {data['topics_and_concepts']}
+    """)
 
-    IMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. """)
+    if data['selected_materials']:
+
+        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
+        for material in data['selected_materials']:
+            user_input += f"Material: {material.title}\n{material.text}\n"
+
+    user_input+= "\nIMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. "
 
     response = model.generate_content(user_input)
 

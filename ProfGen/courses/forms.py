@@ -53,7 +53,7 @@ class AssignmentForm(forms.ModelForm):
     total_points = forms.IntegerField(min_value=1, max_value=100, required=False)
     specific_requirements_and_instructions = forms.CharField(widget=forms.Textarea, required=False)
 
-    limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
+    # limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
     selected_materials = forms.ModelMultipleChoiceField(queryset=UploadedMaterial.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -113,7 +113,7 @@ class QuizForm(forms.ModelForm):
     question_style = forms.MultipleChoiceField(choices=Q_STYLE_CHOICES, widget=forms.SelectMultiple, required=False)
 
     # MATERIAL SELECTION
-    limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
+    # limit_to_selected = forms.BooleanField(required=False, label="Limit quiz to specific materials?")
     selected_materials = forms.ModelMultipleChoiceField(queryset=UploadedMaterial.objects.all(), required=False)
 
     def __init__(self, *args, **kwargs):

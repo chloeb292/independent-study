@@ -7,7 +7,7 @@ from ..forms import CourseForm, UploadedMaterialForm
 from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
 import os
-from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfReader
 from docx import Document
 from django.http import HttpResponseBadRequest
 from pptx import Presentation
@@ -69,7 +69,7 @@ def edit_course(request, course_id):
 
 def extract_text_from_pdf(uploaded_file):
     text = ""
-    reader = PdfFileReader(uploaded_file)
+    reader = PdfReader(uploaded_file)
     for page in reader.pages:
         text += page.extract_text() + "\n"
     return text
@@ -114,10 +114,8 @@ def upload_material(request, course_id):
             else:
                 return HttpResponseBadRequest("Unsupported file format.")
 
-            # Save the text as a txt file
-            txt_file_path = os.path.join('path/to/save/txt/files', f"{file_name}.txt")
-            with open(txt_file_path, 'w') as txt_file:
-                txt_file.write(text)
+            print("TEXT", text)
+            material.text = text
 
             material.save()
             return redirect('course_detail', course_id=course.id)
