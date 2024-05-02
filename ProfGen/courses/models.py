@@ -26,7 +26,8 @@ class UploadedMaterial(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     file = models.FileField(upload_to='templates/courses/materials/')
-
+    text = models.TextField(default="")
+ 
     def __str__(self):
         return str(self.title)
     

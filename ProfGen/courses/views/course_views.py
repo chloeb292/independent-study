@@ -6,6 +6,11 @@ from ..models import Course, UploadedMaterial
 from ..forms import CourseForm, UploadedMaterialForm
 from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
+import os
+from PyPDF2 import PdfFileReader
+from docx import Document
+from django.http import HttpResponseBadRequest
+from pptx import Presentation
 
 @login_required
 def course_list(request):
@@ -48,19 +53,80 @@ def edit_course(request, course_id):
         form = CourseForm(instance=course)
     return render(request, 'courses/edit_course.html', {'form': form, 'course': course})
 
+# @login_required
+# def upload_material(request, course_id):
+#     course = get_object_or_404(Course, id=course_id, professor=request.user)
+#     if request.method == 'POST':
+#         form = UploadedMaterialForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             material = form.save(commit=False)
+#             material.course = course
+#             material.save()
+#             return redirect('course_detail', course_id=course.id)
+#     else:
+#         form = UploadedMaterialForm()
+#     return render(request, 'courses/upload_material.html', {'form': form, 'course': course})
+
+def extract_text_from_pdf(uploaded_file):
+    text = ""
+    reader = PdfFileReader(uploaded_file)
+    for page in reader.pages:
+        text += page.extract_text() + "\n"
+    return text
+
+def extract_text_from_docx(uploaded_file):
+    text = ""
+    document = Document(uploaded_file)
+    for para in document.paragraphs:
+        text += para.text + "\n"
+    return text
+
+def extract_text_from_pptx(uploaded_file):
+    text = ""
+    presentation = Presentation(uploaded_file)
+    for slide in presentation.slides:
+        for shape in slide.shapes:
+            if hasattr(shape, "text"):
+                text += shape.text + "\n"
+    return text
+
 @login_required
 def upload_material(request, course_id):
     course = get_object_or_404(Course, id=course_id, professor=request.user)
+    
     if request.method == 'POST':
         form = UploadedMaterialForm(request.POST, request.FILES)
+        
         if form.is_valid():
             material = form.save(commit=False)
             material.course = course
+
+            # Process the uploaded file and convert it to a txt file
+            uploaded_file = request.FILES['file']
+            file_name, file_extension = os.path.splitext(uploaded_file.name)
+
+            if file_extension == '.pdf':
+                text = extract_text_from_pdf(uploaded_file)
+            elif file_extension == '.docx':
+                text = extract_text_from_docx(uploaded_file)
+            elif file_extension == '.pptx':
+                text = extract_text_from_pptx(uploaded_file)
+            else:
+                return HttpResponseBadRequest("Unsupported file format.")
+
+            # Save the text as a txt file
+            txt_file_path = os.path.join('path/to/save/txt/files', f"{file_name}.txt")
+            with open(txt_file_path, 'w') as txt_file:
+                txt_file.write(text)
+
             material.save()
             return redirect('course_detail', course_id=course.id)
+
     else:
         form = UploadedMaterialForm()
+
     return render(request, 'courses/upload_material.html', {'form': form, 'course': course})
+
 
 @login_required
 def material_detail(request, course_id, material_id):
