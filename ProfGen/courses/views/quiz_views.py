@@ -11,13 +11,24 @@ import pdfplumber
 import pytesseract
 from PIL import Image
 from io import BytesIO
+import anthropic
 
 
 load_dotenv()
 
-API_KEY = os.getenv('API_KEY')
-genai.configure(api_key=os.environ["API_KEY"])
-model = genai.GenerativeModel('gemini-pro')
+client = anthropic.Anthropic(
+    api_key=os.getenv('ANTHROPIC_API_KEY'),
+)
+
+def generate_response(prompt):
+    message = client.messages.create(
+        model="claude-3-opus-20240229",
+        max_tokens=1024,
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return message.content[0].text
 
 
 # Create your views here.
@@ -75,9 +86,9 @@ def generate_quiz_questions(data):
 
     user_input+= "\nIMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. "
 
-    response = model.generate_content(user_input)
+    response = generate_response(user_input)
 
-    response = response.text.strip()
+    # response = response.text.strip()
     # response = markdown.markdown(response)
 
     return response
@@ -103,8 +114,8 @@ def generate_quiz_answer_key(request, course_id, quiz_id):  # Corrected view sig
     {quiz.questions}.
     """)  # Define user input for content generation
 
-    response = model.generate_content(user_input)  # Generate answer key content
-    quiz.answerkey = response.text.strip()  # Assign to quiz object
+    response = generate_response(user_input)
+    quiz.answerkey = response
     quiz.save()  # Save updated quiz object
 
     return redirect('quiz_detail', course_id=course_id, quiz_id=quiz_id)
@@ -169,9 +180,7 @@ def grade_student_quiz(request, course_id, quiz_id):
         Please provide a grade for each question in the quiz. Explain why the student received the grade they did. If the student's answer is incorrect, provide feedback on how they can improve.
         """)
 
-        response = model.generate_content(user_prompt)
-        response = response.text.strip()
-        print("RESPONSE", response)
+        response = generate_response(user_prompt)
 
         # Save the student's quiz and grade
         student_quiz = Student_Quiz(student_f_name=student_f_name, student_l_name=student_l_name, quiz=quiz, submission=submission_text, grade=response)
