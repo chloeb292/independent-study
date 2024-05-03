@@ -6,7 +6,7 @@
 <h2>{{ assignment.title }}</h2>
 <p>{{ assignment.description }}</p>
 
-{{ assignment.content|safe }}
+{{ assignment.content|markdown|safe }}
 
 <h1>Answer Key</h1>
 {{ answerkey|markdown|safe }}

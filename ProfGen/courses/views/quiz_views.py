@@ -64,9 +64,6 @@ def generate_quiz_questions(data):
     The quiz should have the following question formats: {data['question_style']}.                 
     """)
 
-    if data['limit_to_selected'] and data['selected_materials']:
-        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
-    
     user_input+= textwrap.dedent(f"""This quiz must be exclusively about the following topics: {data['topics_and_concepts']}
     """)
 

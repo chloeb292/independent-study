@@ -75,7 +75,7 @@ class QuizForm(forms.ModelForm):
         }
 
 
-    LANGUAGE_CHOICES = (("python", "Python"), ("java", "Java"), ("c", "C"), ("c++", "C++"), ("other", "Other"))
+    LANGUAGE_CHOICES = (("python", "Python"), ("java", "Java"), ("c", "C"), ("c++", "C++"))
 
     DIFFICULTY_CHOICES =(
         ("elementary", "Elementary"),
@@ -92,7 +92,6 @@ class QuizForm(forms.ModelForm):
         ("output", "Predict Output"),
         ("code", "Write Short Coding Solution"),
         ("complete_code", "Complete Pre-Written Code"),
-        ("other", "Other"),
 
     )
     
@@ -101,13 +100,10 @@ class QuizForm(forms.ModelForm):
     
     # Select dropdowns
     programming_language = forms.ChoiceField(choices=LANGUAGE_CHOICES, widget=forms.Select, required=False)
-    if programming_language == 'other':
-        programming_language = forms.CharField(max_length=100, required=False)
 
     difficulty_level = forms.ChoiceField(choices=DIFFICULTY_CHOICES, widget=forms.Select, required=False)
     num_questions = forms.IntegerField(min_value=1, max_value=50, required=False)
     total_points = forms.IntegerField(min_value=1, max_value=100, required=False)
-    fixed_points_per_question = forms.BooleanField(required=False)
 
     question_type = forms.MultipleChoiceField(choices=Q_TYPE_CHOICES, widget=forms.SelectMultiple, required=False)
     question_style = forms.MultipleChoiceField(choices=Q_STYLE_CHOICES, widget=forms.SelectMultiple, required=False)

@@ -154,6 +154,11 @@ def extract_text_from_image(file):
     
     return text
 
+def extract_text_from_python(file):
+    text = file.read().decode('utf-8')
+    return text
+
+
 def grade_student_assignment(request, course_id, assignment_id):
     assignment = get_object_or_404(Assignment, pk=assignment_id)
     if request.method == 'POST':
@@ -175,9 +180,11 @@ def grade_student_assignment(request, course_id, assignment_id):
             #if pdf extract text from pdf
             elif file.name.endswith('.pdf'):
                 submission_text += extract_text_from_pdf(file)
+            elif file.name.endswith('.py'):
+                submission_text += extract_text_from_python(file)
             else:
                 form.add_error(None, "Please upload only PDF files.")
-                return render(request, 'courses/grade_student_quiz.html', {'quiz': quiz, 'form': form})
+                return render(request, 'courses/grade_student_assignment.html', {'assignment': assignment, 'form': form})
 
         print("SUBMISSION TEXT", submission_text)   
 
