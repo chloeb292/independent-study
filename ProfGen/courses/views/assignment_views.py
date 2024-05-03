@@ -209,7 +209,7 @@ def grade_student_assignment(request, course_id, assignment_id):
         Please provide a grade for each question in the assignment. Explain why the student received the grade they did. If the student's answer is incorrect, provide feedback on how they can improve.
         """)
 
-        response = generate_response(user_input)
+        response = generate_response(user_prompt)
 
         # Save the student's assignment and grade
         student_assignment = Student_Assignment(student_f_name=student_f_name, student_l_name=student_l_name, assignment=assignment, submission=submission_text, grade=response)
