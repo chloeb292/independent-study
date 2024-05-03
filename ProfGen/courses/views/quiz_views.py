@@ -64,12 +64,16 @@ def generate_quiz_questions(data):
     The quiz should have the following question formats: {data['question_style']}.                 
     """)
 
-    if data['limit_to_selected'] and data['selected_materials']:
-        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
-    
     user_input+= textwrap.dedent(f"""This quiz must be exclusively about the following topics: {data['topics_and_concepts']}
+    """)
 
-    IMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. """)
+    if data['selected_materials']:
+
+        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
+        for material in data['selected_materials']:
+            user_input += f"Material: {material.title}\n{material.text}\n"
+
+    user_input+= "\nIMPORTANT: DO NOT GENERATE AN ANSWER KEY FOR THIS QUIZ. When writing comments in the code, do not use '#', insted use '//' no matter the language. "
 
     response = model.generate_content(user_input)
 
@@ -133,13 +137,18 @@ def grade_student_quiz(request, course_id, quiz_id):
         uploaded_files = request.FILES.getlist("submission")
         submission_text = ""
 
-        # check if the uploaded file is a PDF
-        if not all(file.name.endswith('.pdf') for file in uploaded_files):
-            form.add_error(None, "Please upload only PDF files.")
-            return render(request, 'courses/grade_student_quiz.html', {'quiz': quiz, 'form': form})
-
+        
         for file in uploaded_files:
-            submission_text += extract_text_from_pdf(file)
+            #if image extract text from image (ends with png, jpg, jpeg)
+            if file.name.endswith('.png') or file.name.endswith('.jpg') or file.name.endswith('.jpeg'):
+                submission_text += extract_text_from_image(file)
+            #if pdf extract text from pdf
+            elif file.name.endswith('.pdf'):
+                submission_text += extract_text_from_pdf(file)
+            else:
+                form.add_error(None, "Please upload only PDF files.")
+                return render(request, 'courses/grade_student_quiz.html', {'quiz': quiz, 'form': form})
+            
 
         print("SUBMISSION TEXT", submission_text)   
 

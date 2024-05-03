@@ -11,9 +11,10 @@
     {% elif file_ext|lower in "ppt pptx" %}
     <iframe src="https://docs.google.com/gviewer?url={{ file_url|urlencode }}&embedded=true" style="width:100%; height:600px;" frameborder="0"></iframe>
     {% else %}
-    <p>Unsupported file type. <a href="{{ file_url }}">Download the file</a> to view it.</p>
-    {% endif %}
     
+    {% endif %}
+
+    <a href="{{ file_url }}">Download the file</a> to view it.</p>
 {% endwith %}
 
 <!-- Assuming 'material' is the context variable passed to the template -->

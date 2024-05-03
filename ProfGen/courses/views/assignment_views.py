@@ -8,6 +8,8 @@ import google.generativeai as genai
 import os, pathlib, textwrap
 import markdown
 from dotenv import load_dotenv
+import pytesseract
+from PIL import Image
 
 load_dotenv()
 
@@ -58,9 +60,13 @@ def generate_assignment_content(data):
     The total points for this assignment is: {data['total_points']}. Please distribute the points according to the difficulty of the questions.
     The specific requirements and instructions for this assignment are: {data['specific_requirements_and_instructions']}.                     
     """)
-    if data['limit_to_selected'] and data['selected_materials']:
-        user_input += "The assignment should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
-    
+    if data['selected_materials']:
+
+        user_input += "The quiz should be limited to the selected materials. Do not reference anything that is not found in the selected materials."
+        for material in data['selected_materials']:
+            user_input += f"Material: {material.title}\n{material.text}\n"
+
+
     user_input+="""
 
     Assignment Template:
@@ -141,6 +147,18 @@ def extract_text_from_pdf(file):
         text = " ".join(page.extract_text() for page in pdf.pages)
     return text
 
+def extract_text_from_image(file):
+    # Convert the file to an image object
+    image = Image.open(file)
+    text = pytesseract.image_to_string(image)
+    
+    return text
+
+def extract_text_from_python(file):
+    text = file.read().decode('utf-8')
+    return text
+
+
 def grade_student_assignment(request, course_id, assignment_id):
     assignment = get_object_or_404(Assignment, pk=assignment_id)
     if request.method == 'POST':
@@ -155,13 +173,18 @@ def grade_student_assignment(request, course_id, assignment_id):
         uploaded_files = request.FILES.getlist("submission")
         submission_text = ""
 
-        # check if the uploaded file is a PDF
-        if not all(file.name.endswith('.pdf') for file in uploaded_files):
-            form.add_error(None, "Please upload only PDF files.")
-            return render(request, 'courses/grade_student_assignment.html', {'assignment': assignment, 'form': form})
-
         for file in uploaded_files:
-            submission_text += extract_text_from_pdf(file)
+            #if image extract text from image (ends with png, jpg, jpeg)
+            if file.name.endswith('.png') or file.name.endswith('.jpg') or file.name.endswith('.jpeg'):
+                submission_text += extract_text_from_image(file)
+            #if pdf extract text from pdf
+            elif file.name.endswith('.pdf'):
+                submission_text += extract_text_from_pdf(file)
+            elif file.name.endswith('.py'):
+                submission_text += extract_text_from_python(file)
+            else:
+                form.add_error(None, "Please upload only PDF files.")
+                return render(request, 'courses/grade_student_assignment.html', {'assignment': assignment, 'form': form})
 
         print("SUBMISSION TEXT", submission_text)   
 
