@@ -10,13 +10,23 @@ import markdown
 from dotenv import load_dotenv
 import pytesseract
 from PIL import Image
+import anthropic
 
 load_dotenv()
 
-API_KEY = os.getenv('API_KEY')
-genai.configure(api_key=os.environ["API_KEY"])
-model = genai.GenerativeModel('gemini-pro')
+client = anthropic.Anthropic(
+    api_key=os.getenv('ANTHROPIC_API_KEY'),
+)
 
+def generate_response(prompt):
+    message = client.messages.create(
+        model="claude-3-opus-20240229",
+        max_tokens=1024,
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return message.content[0].text
 
 # Create your views here.
 @login_required
@@ -101,10 +111,7 @@ def generate_assignment_content(data):
 
     """
 
-    response = model.generate_content(user_input)
-
-    response = response.text.strip()
-    # response = markdown.markdown(response)
+    response = generate_response(user_input)
 
     return response
 
@@ -131,13 +138,10 @@ def generate_answer_key(request, course_id, assignment_id):
     """)
     
     
-    response = model.generate_content(user_input)
-    response = response.text.strip()
+    response = generate_response(user_input)
     assignment.answerkey = response
     assignment.save()
 
-    # print(response)
-    # print("ANSWER KEY", assignment.answerkey)
     return redirect('assignment_detail', course_id=course_id, assignment_id=assignment_id)
     
 
@@ -205,9 +209,7 @@ def grade_student_assignment(request, course_id, assignment_id):
         Please provide a grade for each question in the assignment. Explain why the student received the grade they did. If the student's answer is incorrect, provide feedback on how they can improve.
         """)
 
-        response = model.generate_content(user_prompt)
-        response = response.text.strip()
-        print("RESPONSE", response)
+        response = generate_response(user_prompt)
 
         # Save the student's assignment and grade
         student_assignment = Student_Assignment(student_f_name=student_f_name, student_l_name=student_l_name, assignment=assignment, submission=submission_text, grade=response)
